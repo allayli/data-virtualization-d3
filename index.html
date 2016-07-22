@@ -1,14 +1,17 @@
 <html>
     <body>
-        <center> <h3>Countries Count in Partition Graph </h3> </center>
+        <center> <h3>Provinces & Cities Count in Partition Graph </h3> </center>
         <script src="https://d3js.org/d3.v3.min.js"></script>
         <script>
           var width = parseInt(window.innerWidth * 0.9),
           height = parseInt(window.innerHeight * 0.9),
           radius = Math.min(width, height) / 2,
+          color = d3.scale.category20c();
+          /*
           color = function(){
             return "hsl(" + (~~(Math.random()*360%360)) + ", 180%, 50%)";
           };
+          */
 
           var svg = d3.select("body").append("svg")
           .attr("width", width)
@@ -27,34 +30,48 @@
           .innerRadius(function(d) { return Math.sqrt(d.y); })
           .outerRadius(function(d) { return Math.sqrt(d.y + d.dy); });
 
-          d3.csv("data.csv", function(data) {
+          d3.csv("AddressesCN.csv", function(data) {
             console.log(data);
             var dataset = {
               "name": "Address",
               "children": []
             };
-            var countries = {};
-            var cities = {};
+            var province = {};
+            var city = {};
 
             for (var i=0; i<data.length; i++) {
-              if(countries[data[i].countries]){
-                countries[data[i].countries]++;
+              var p = [data[i].province] || [data[i].city];
+              if(province[p]){
+                province[p].count++;
+                if(province[p].cities.indexOf(data[i].city) < 0){
+                  province[p].cities.push(data[i].city);
+                }
               } else {
-                countries[data[i].countries] = 1;
+                province[p] = {
+                  count: 1
+                };
+                province[p].cities = [data[i].city];
               }
             }
+            console.log(province);
             for (var i=0; i<data.length; i++) {
-              if(cities[data[i].cities]){
-                cities[data[i].cities]++;
+              if(city[data[i].city]){
+                city[data[i].city]++;
               } else {
-                cities[data[i].cities] = 1;
+                city[data[i].city] = 1;
               }
             }
-            console.log(cities);
-            for (var key in countries) {
+            console.log(city);
+            for (var key in province) {
               dataset.children.push({
                 "name": key,
-                "size": countries[key]
+                "size": province[key].count,
+                "children": province[key].cities.map(function(name){
+                  return {
+                    "name": name,
+                    "size": city[name]
+                  }
+                })
               })
             }
             console.log(dataset);
@@ -64,7 +81,7 @@
             .attr("display", function(d) { return d.depth ? null : "none"; }) // hide inner ring
             .attr("d", arc)
             .style("stroke", "#fff")
-            .style("fill", color)
+            .style("fill", function(d) { return color((d.children ? d : d.parent).name); })
             .style("fill-rule", "evenodd")
             .each(stash);
 
