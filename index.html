@@ -1,0 +1,35 @@
+<html>
+    <body>
+        <table>
+            <tbody id="table">
+            </tbody>
+        </table>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <script>
+            d3.csv("data.csv", function(data) {
+              console.log(data);
+              var dataset = {
+                "name": "Address",
+                "children": []
+              };
+              var countries = {};
+              var cities = {};
+
+              for (var i=0; i<data.length; i++) {
+                if(countries[data[i].countries]){
+                  countries[data[i].countries]++;
+                } else {
+                  countries[data[i].countries] = 1;
+                }
+              }
+              for (var key in countries) {
+                dataset.children.push({
+                  "name": key,
+                  "size": countries[key]
+                })
+              }
+              console.log(dataset);
+            });
+        </script>
+    </body>
+</html>
